@@ -1,0 +1,577 @@
+"""Parameters"""
+
+import numpy as np
+from . import custom_metrics
+
+interesting_cols = ["ID", "COMMON_NAME", "Taxa", "Class", "SEX", "DATABASE", "TAG", "NumberOfSatellites", "Length", "Mean_latitude", "Mean_longitude", "Mean_year"]
+updated_cols = ['Cluster ID', 'Cluster ID confidence', 'Cluster ID confidence interval', 'Animals in dataset', 'Animals in dataset interval', 'Length interval', "Mean year interval"]
+secondary_cols = ["Order", "Family", "SatelliteProg", "TAG_TYPE", "ResidualError", "Stage", "AGE", "BODY_LENGTH"]
+totally_unimportant_cols = ["Colour"]
+all_cols = interesting_cols + secondary_cols + totally_unimportant_cols + updated_cols
+#NOTE: ID != UniqueAnimal_ID, but equally identify the animals I think
+
+discarded_weather_cols = ["2 metre temperature",
+                          '100 metre U wind component', '100 metre V wind component', 'Neutral wind at 10 m u-component', 'Neutral wind at 10 m v-component',
+                          'Surface pressure'
+                         ]
+
+weather_col_selection = ["Bathymetry", 'Sea ice area fraction', 'Sea surface temperature', 'Surface net solar radiation', 'Surface net thermal radiation',
+                         'Mean sea level pressure', 'Significant height of combined wind waves and swell']
+
+weather_cols = dict(temperature = ['Sea ice area fraction', 'Sea surface temperature',
+                                   'Surface net solar radiation', 'Surface net thermal radiation'
+                                  ],
+                    wind = ['10 metre U wind component', '10 metre V wind component','K index',
+                            'Mean sea level pressure', "Total precipitation"
+                           ] ,
+                    waves = ['Mean wave period', 'Significant height of combined wind waves and swell',
+                             'Mean wave direction_x', 'Mean wave direction_y'],
+                    bathymetry = ["Bathymetry"]
+)
+weather_cols_idxs = {}
+pointer = 0
+for k, v in weather_cols.items():
+    list_len = len(v)
+    weather_cols_idxs[k] = np.arange(pointer, pointer + list_len)
+    pointer += list_len
+
+weather_cols.update(dict(all=[col for value in weather_cols.values() for col in value]))
+weather_cols_idxs["all"] = np.arange(len(weather_cols["all"]))
+
+cds_to_cols = {'mercator': ['X', 'Y'],
+               'spherical': ['SN', 'WE'],
+               'spherical-ref-point': ['SN', 'WE'],
+               'spherical-dx': ['X', 'Y', 'Z'], # as input
+               }
+
+feature_map = {'Relative time idx': 'Time index',
+               'Dt': 'Sampling period',
+               'Encoder length': 'Observation time',
+               'V': 'Speed',
+               'Ir albedo': 'Infra-red albedo',
+               }
+feature_map_imputation = feature_map.copy()
+feature_map_imputation['Encoder length'] = 'Observation time (past)'
+feature_map_imputation['Future encoder length'] = 'Observation time (future)'
+
+error_analysis_feature_map = feature_map.copy()
+
+error_analysis_feature_map.update( {'area': 'PR area',
+                                    'abs_distance_y': 'Cumulative distance (Y)',
+                                    'abs_distance_x': 'Cumulative distance (X)',
+                                    '1D_x': 'PI asymmetry (X)',
+                                    '1D_y': 'PI asymmetry (Y)',
+                                    '2D': 'PR asymmetry',
+                                    'sin t': 'Time (sin)',
+                                    'distance': 'Distance',
+                                    'average_speed': 'Average speed',
+                                    'net_movement_y': 'Net movement (Y)',
+                                    'sin_H': 'Hour angle (sin)',
+                                    'cos_H': 'Hour angle (cos)',
+                                    'area_growth': 'PR area growth',
+                                    '1D_x_right_higher': 'P(X upward skew)',
+                                    '1D_y_right_higher': 'P(Y upward skew)',
+                                    'month': 'Month',
+                                    'directionality_hurst': 'Directionality persistence',
+                                    'relative_time_idx': 'Time index',
+                                    'dt': 'Sampling period',
+                                    'encoder_length': 'Observation time',
+                                    'num_repeated_values_just_before_end': 'Repeated values (end)',
+                                    'ptg_missing': '% Missing values',
+                                    }
+                                  )
+
+error_analysis_prediction_attrs = ['1D_x',
+                                   '1D_x_right_higher',
+                                   '1D_y',
+                                   '1D_y_right_higher',
+                                   '2D',
+                                   '2D_X_wider',
+                                   'area',
+                                   'area_growth',
+                                   ]
+error_analysis_prediction_attrs_mapped = [error_analysis_feature_map.get(f, f) for f in error_analysis_prediction_attrs]
+error_analysis_main_targets = ['Distance', 'Q', 'Q_alpha', 'Q_area']
+
+
+default_model_specs = dict(
+    learning_rate=0.05493120957695791, #0.03,
+    hidden_size=31, #16,
+    attention_head_size=3, #1,
+    dropout=0.1476740317709731,# 0.1,
+    hidden_continuous_size=22, #8,
+    log_interval=10,  # uncomment for learning rate finder and otherwise, e.g. to 10 for logging every 10 batches
+    reduce_on_plateau_patience=4,
+)
+
+default_training_specs = dict(
+    enable_model_summary=True,
+    gradient_clip_val=0.8076685834252939, #0.1
+    deterministic="warn",
+)
+
+default_quantiles = {'bonferroni': [0.0125, 0.025, 0.125, 0.5, 0.875, 0.975, 0.9875],
+                     'exact': custom_metrics.exact_quantiles().tolist(),
+                     '1D': [0.05, 0.5, 0.95], # 90% CI
+                     'alpha-stable': [0.05, 0.25, 0.5, 0.75, 0.95], # McCulloch 1986
+                     }
+
+quantile_best_params = {'forecasting': {'spherical': [(0.00902564637362957,
+                                                       {'attention_head_size': 1,
+                                                        'dropout': 0.07869024575619898,
+                                                        'gradient_clip_val': 0.9503790641694669,
+                                                        'hidden_continuous_size': 16,
+                                                        'hidden_size': 89,
+                                                        'learning_rate': 0.016595869074375606}),
+                                                      (0.00988034624606371,
+                                                       {'attention_head_size': 4,
+                                                        'dropout': 0.13083896454306232,
+                                                        'gradient_clip_val': 0.018725451458961127,
+                                                        'hidden_continuous_size': 30,
+                                                        'hidden_size': 46,
+                                                        'learning_rate': 0.025118864315095808}),
+                                                      (0.009884543716907501,
+                                                       {'attention_head_size': 4,
+                                                        'dropout': 0.265125767154974,
+                                                        'gradient_clip_val': 0.01626406195221167,
+                                                        'hidden_continuous_size': 8,
+                                                        'hidden_size': 66,
+                                                        'learning_rate': 0.02884031503126605}),
+                                                      (0.009962409734725952,
+                                                       {'attention_head_size': 3,
+                                                        'dropout': 0.12964793846722078,
+                                                        'gradient_clip_val': 0.4833523920511726,
+                                                        'hidden_continuous_size': 26,
+                                                        'hidden_size': 46,
+                                                        'learning_rate': 0.014454397707459274}),
+                                                      (0.010205687955021858,
+                                                       {'attention_head_size': 2,
+                                                        'dropout': 0.06442486393261897,
+                                                        'gradient_clip_val': 0.19211167336393145,
+                                                        'hidden_continuous_size': 25,
+                                                        'hidden_size': 33,
+                                                        'learning_rate': 0.025118864315095808})],
+                                        'mercator_without_H_angle_dt_V':[(124.94535827636719,
+                                                                          {'attention_head_size': 3,
+                                                                           'dropout': 0.18025425832894415,
+                                                                           'gradient_clip_val': 0.37313367608514686,
+                                                                           'hidden_continuous_size': 22,
+                                                                           'hidden_size': 72,
+                                                                           'learning_rate': 0.016595869074375606}),
+                                                                         (125.9905014038086,
+                                                                          {'attention_head_size': 4,
+                                                                           'dropout': 0.007639767426626465,
+                                                                           'gradient_clip_val': 0.5660949800142702,
+                                                                           'hidden_continuous_size': 13,
+                                                                           'hidden_size': 103,
+                                                                           'learning_rate': 0.010232929922807544}),
+                                                                         (126.63037109375,
+                                                                          {'attention_head_size': 3,
+                                                                           'dropout': 0.23252066521275103,
+                                                                           'gradient_clip_val': 0.3915430760273332,
+                                                                           'hidden_continuous_size': 63,
+                                                                           'hidden_size': 87,
+                                                                           'learning_rate': 0.020417379446695298}),
+                                                                         (126.71337890625,
+                                                                          {'attention_head_size': 3,
+                                                                           'dropout': 0.23411514904618053,
+                                                                           'gradient_clip_val': 0.7333435457525745,
+                                                                           'hidden_continuous_size': 23,
+                                                                           'hidden_size': 68,
+                                                                           'learning_rate': 0.016595869074375606}),
+                                                                         (127.90203857421875,
+                                                                          {'attention_head_size': 2,
+                                                                           'dropout': 0.22467002321938842,
+                                                                           'gradient_clip_val': 0.6693748788625384,
+                                                                           'hidden_continuous_size': 23,
+                                                                           'hidden_size': 53,
+                                                                           'learning_rate': 0.033113112148259106})],
+                                        'mercator': [(116.54377746582031,
+                                                      {'attention_head_size': 4,
+                                                       'dropout': 0.13984467730413966,
+                                                       'gradient_clip_val': 0.9069147211839267,
+                                                       'hidden_continuous_size': 24,
+                                                       'hidden_size': 107,
+                                                       'learning_rate': 0.005888436553555889}),
+                                                     (121.77910614013672,
+                                                      {'attention_head_size': 4,
+                                                       'dropout': 0.01393186804481693,
+                                                       'gradient_clip_val': 0.015708190617280782,
+                                                       'hidden_continuous_size': 24,
+                                                       'hidden_size': 37,
+                                                       'learning_rate': 0.020417379446695298}),
+                                                     (122.07386779785156,
+                                                      {'attention_head_size': 4,
+                                                       'dropout': 0.14406815664728526,
+                                                       'gradient_clip_val': 0.4079809287753605,
+                                                       'hidden_continuous_size': 18,
+                                                       'hidden_size': 63,
+                                                       'learning_rate': 0.023442288153199226}),
+                                                     (125.31089782714844,
+                                                      {'attention_head_size': 3,
+                                                       'dropout': 0.028688980229101445,
+                                                       'gradient_clip_val': 0.9867617361842217,
+                                                       'hidden_continuous_size': 57,
+                                                       'hidden_size': 116,
+                                                       'learning_rate': 0.007762471166286918}),
+                                                     (125.9905014038086,
+                                                      {'attention_head_size': 4,
+                                                       'dropout': 0.007639767426626465,
+                                                       'gradient_clip_val': 0.5660949800142702,
+                                                       'hidden_continuous_size': 13,
+                                                       'hidden_size': 103,
+                                                       'learning_rate': 0.010232929922807544}),
+                                                     (122.30731964111328, # extra
+                                                      {'attention_head_size': 17,
+                                                       'dropout': 0.1646695753471239,
+                                                       'gradient_clip_val': 0.7843407167129727,
+                                                       'hidden_continuous_size': 17,
+                                                       'hidden_size': 95,
+                                                       'learning_rate': 0.015488166189124812})],
+                                        'spherical-dx': [(0.20158588886260986, # for joint_prediction=False
+                                                          {'attention_head_size': 3,
+                                                           'dropout': 0.07725055745291323,
+                                                           'gradient_clip_val': 0.017327743031989255,
+                                                           'hidden_continuous_size': 49,
+                                                           'hidden_size': 111,
+                                                           'learning_rate': 0.050118723362727234}),
+                                                         (0.20345377922058105,
+                                                          {'attention_head_size': 2,
+                                                           'dropout': 0.09647780244379106,
+                                                           'gradient_clip_val': 0.010154261315882988,
+                                                           'hidden_continuous_size': 18,
+                                                           'hidden_size': 99,
+                                                           'learning_rate': 0.0933254300796991}),
+                                                         (0.2054673433303833,
+                                                          {'attention_head_size': 2,
+                                                           'dropout': 0.03425303617181858,
+                                                           'gradient_clip_val': 0.019648252336242556,
+                                                           'hidden_continuous_size': 46,
+                                                           'hidden_size': 80,
+                                                           'learning_rate': 0.0933254300796991}),
+                                                         (0.20948953926563263,
+                                                          {'attention_head_size': 1,
+                                                           'dropout': 0.26302357377990926,
+                                                           'gradient_clip_val': 0.01056024702897714,
+                                                           'hidden_continuous_size': 9,
+                                                           'hidden_size': 63,
+                                                           'learning_rate': 0.0933254300796991}),
+                                                         (0.21010446548461914,
+                                                          {'attention_head_size': 1,
+                                                           'dropout': 0.05595941346185773,
+                                                           'gradient_clip_val': 0.03207834467825512,
+                                                           'hidden_continuous_size': 21,
+                                                           'hidden_size': 65,
+                                                           'learning_rate': 0.0933254300796991})]
+
+                                        },
+                        'imputation': {'mercator': [(89.6550521850586,
+                                                     {'attention_head_size': 7,
+                                                      'dropout': 0.11032785423356531,
+                                                      'gradient_clip_val': 43.37681134760714,
+                                                      'hidden_continuous_size': 41,
+                                                      'hidden_size': 61,
+                                                      'learning_rate': 0.004786300923226385}),
+                                                    (91.89583587646484,
+                                                     {'attention_head_size': 9,
+                                                      'dropout': 0.03255174166659857,
+                                                      'gradient_clip_val': 4.578179684577524,
+                                                      'hidden_continuous_size': 35,
+                                                      'hidden_size': 150,
+                                                      'learning_rate': 0.0019498445997580456}),
+                                                    (92.29318237304688,
+                                                     {'attention_head_size': 4,
+                                                      'dropout': 0.03683732792193518,
+                                                      'gradient_clip_val': 83.81181005126552,
+                                                      'hidden_continuous_size': 32,
+                                                      'hidden_size': 85,
+                                                      'learning_rate': 0.002951209226666386}),
+                                                    (92.45692443847656,
+                                                     {'attention_head_size': 7,
+                                                      'dropout': 0.07270827219188547,
+                                                      'gradient_clip_val': 31.526071403402256,
+                                                      'hidden_continuous_size': 11,
+                                                      'hidden_size': 65,
+                                                      'learning_rate': 0.004168693834703355}),
+                                                    (92.4838638305664,
+                                                     {'attention_head_size': 3,
+                                                      'dropout': 0.11360609921385507,
+                                                      'gradient_clip_val': 45.42066872812401,
+                                                      'hidden_continuous_size': 60,
+                                                      'hidden_size': 110,
+                                                      'learning_rate': 0.0027542287033381664})],
+                                       }
+                        }
+
+
+ssm_models = ['rw', 'crw', 'mp']
+R_earth = 6378.137
+
+def model_specs():
+    return {'TFT_dist': dict(baseline=False, ssm_model=None, params_idx='best', quantiles='all', density='qrde', rho=True, max_train_days=4),
+            'TFT': dict(baseline=False, ssm_model=None, params_idx='best'),
+            'TFT_single': dict(baseline=False, ssm_model=None, params_idx='best', ID='all'),
+            'Naive': dict(baseline=True, ssm_model=None),
+            'RW': dict(baseline=False, ssm_model='rw'),
+            'CRW': dict(baseline=False, ssm_model='crw'),
+            'MP': dict(baseline=False, ssm_model='mp')}
+
+def model_specs_force_CI_expansion():
+    return {'TFT_dist': dict(baseline=False, ssm_model=None, params_idx='best', quantiles='all', density='qrde', rho=True, max_train_days=4, mpl_val=True),
+            'TFT': dict(baseline=False, ssm_model=None, params_idx='best', mpl_val=True),
+            'TFT_single': dict(baseline=False, ssm_model=None, params_idx='best', ID='all', mpl_val=True),
+            'Naive': dict(baseline=True, ssm_model=None, CI_mpl=True),
+            'RW': dict(baseline=False, ssm_model='rw', se_val_fit=True),
+            'CRW': dict(baseline=False, ssm_model='crw', se_val_fit=True),
+            'MP': dict(baseline=False, ssm_model='mp', se_val_fit=True)}
+
+def model_specs_no_CI_expansion():
+    return {'TFT_dist': dict(baseline=False, ssm_model=None, params_idx='best', quantiles='all', density='qrde', rho=True, max_train_days=4, mpl_val=False),
+            'TFT': dict(baseline=False, ssm_model=None, params_idx='best', mpl_val=False),
+            'TFT_single': dict(baseline=False, ssm_model=None, params_idx='best', ID='all', mpl_val=False),
+            'Naive': dict(baseline=True, ssm_model=None, CI_mpl=False),
+            'RW': dict(baseline=False, ssm_model='rw', se_val_fit=False),
+            'CRW': dict(baseline=False, ssm_model='crw', se_val_fit=False),
+            'MP': dict(baseline=False, ssm_model='mp', se_val_fit=False)}
+
+TFT_specs = {'forecasting': dict(store_missing_idxs=True),
+             # 'imputation': dict(expand_encoder_until_future_length=True, store_missing_idxs=True, decoder_missing_zero_loss=True)
+             'imputation': dict(expand_encoder_until_future_length=True, store_missing_idxs=True,
+                                reverse_future=True,
+                                max_train_days=4, predict_shift=112) # to check the optimal max_train_days, run analysis.best_max_train_days_imputation()
+             }
+
+baseline_specs_imputation = dict(naive_pred='line-sphere', naive_pred_lengths='last-obs')
+
+confidences = [0.5, 0.9, 0.95]
+
+valid_IDs_by_days = {'forecasting': ['ct135-297BAT-13', # valid IDs for training on a single trajectory with the default parameters, by 'day' criteria.
+                                     'ct140-176-15',
+                                     'ct134-277-14',
+                                     'ft22-881-18',
+                                     'ft22-875-18',
+                                     'ft22-874-18',
+                                     'ft22-878-18',
+                                     'ft22-686-18',
+                                     'ft22-879-18',
+                                     'ct135-084BAT-14',
+                                     'ft22-876-18',
+                                     'ct134-295-14',
+                                     'ft22-873-18',
+                                     'ct140-175-15',
+                                     'ct140-695BAT-13',
+                                     'ft22-877-18',
+                                     'ct140-177-15',
+                                     'ct140-690BAT-13',
+                                     'ct140-161-15',
+                                     'ct140-169-15',
+                                     'ct140-189-15',
+                                     'ct140-166-15',
+                                     'ct140-188-15',
+                                     'ct140-163-15',
+                                     'ct140-162-15',
+                                     'ct140-956BAT-14',
+                                     'ct140-173-15',
+                                     'ct140-154BAT-15',
+                                     'ct140-171-15',
+                                     'ct140-699BAT-13',
+                                     'ct140-159BAT-15',
+                                     'ct140-168-15',
+                                     'ct140-170-15',
+                                     'ct140-174-15',
+                                     'ct140-179-15',
+                                     'ct140-700BAT-13',
+                                     'ct140-158BAT-15',
+                                     'ct140-178-15',
+                                     'ct140-635BAT-13',
+                                     'ct140-172-15'],
+                     }
+
+valid_IDs_by_observations = {'forecasting': ['ct140-635BAT-13', # valid IDs for training on a single trajectory with the default parameters, by 'observations' criteria.
+                                             'ct140-172-15',
+                                             'ct140-700BAT-13',
+                                             'ct140-174-15',
+                                             'ct140-699BAT-13',
+                                             'ct140-170-15',
+                                             'ct140-154BAT-15',
+                                             'ct140-158BAT-15',
+                                             'ct140-159BAT-15',
+                                             'ct140-956BAT-14',
+                                             'ct140-179-15',
+                                             'ct140-178-15',
+                                             'ct140-162-15',
+                                             'ct140-168-15',
+                                             'ct140-171-15',
+                                             'ct140-173-15',
+                                             'ct140-188-15',
+                                             'ct140-163-15',
+                                             'ct140-166-15',
+                                             'ct140-169-15',
+                                             'ct140-161-15',
+                                             'ct140-189-15',
+                                             'ct140-690BAT-13',
+                                             'ct140-177-15',
+                                             'ct140-695BAT-13',
+                                             'ct140-175-15',
+                                             'ft22-876-18',
+                                             'ct135-084BAT-14',
+                                             'ct134-295-14',
+                                             'ft22-874-18',
+                                             'ft22-686-18',
+                                             'ft22-881-18',
+                                             'ft22-878-18',
+                                             'ct134-277-14',
+                                             'ft22-877-18',
+                                             'ct140-176-15',
+                                             'ct135-297BAT-13',
+                                             'ft22-873-18',
+                                             'ft22-875-18'],
+                             }
+
+
+valid_IDs_by_obs_by_set = {'forecasting': ['ct134-277-14', # valid IDs for training on a single trajectory with the default parameters, by 'observations-by-set' criteria.
+                                           'ct134-295-14',
+                                           'ct135-084BAT-14',
+                                           'ct140-154BAT-15',
+                                           'ct140-158BAT-15',
+                                           'ct140-159BAT-15',
+                                           'ct140-161-15',
+                                           'ct140-162-15',
+                                           'ct140-163-15',
+                                           'ct140-168-15',
+                                           'ct140-169-15',
+                                           'ct140-170-15',
+                                           'ct140-171-15',
+                                           'ct140-173-15',
+                                           'ct140-174-15',
+                                           'ct140-175-15',
+                                           'ct140-176-15',
+                                           'ct140-177-15',
+                                           'ct140-178-15',
+                                           'ct140-179-15',
+                                           'ct140-188-15',
+                                           'ct140-189-15',
+                                           'ct140-635BAT-13',
+                                           'ct140-690BAT-13',
+                                           'ct140-695BAT-13',
+                                           'ct140-699BAT-13',
+                                           'ct140-700BAT-13',
+                                           'ct140-956BAT-14',
+                                           'ft22-686-18',
+                                           'ft22-873-18',
+                                           'ft22-874-18',
+                                           'ft22-876-18',
+                                           'ft22-878-18',
+                                           'ft22-879-18',
+                                           'ft22-881-18'],
+                           'imputation': ['ct140-154BAT-15',
+                                          'ct140-158BAT-15',
+                                          'ct140-159BAT-15',
+                                          'ct140-161-15',
+                                          'ct140-162-15',
+                                          'ct140-163-15',
+                                          'ct140-166-15',
+                                          'ct140-168-15',
+                                          'ct140-169-15',
+                                          'ct140-170-15',
+                                          'ct140-171-15',
+                                          # 'ct140-172-15', # Does not have test set
+                                          'ct140-173-15',
+                                          'ct140-174-15',
+                                          'ct140-177-15',
+                                          'ct140-178-15',
+                                          'ct140-179-15',
+                                          'ct140-188-15',
+                                          'ct140-189-15',
+                                          'ct140-635BAT-13',
+                                          'ct140-690BAT-13',
+                                          'ct140-699BAT-13',
+                                          'ct140-700BAT-13',
+                                          'ct140-956BAT-14',
+                                          # 'ft22-877-18', # does not achieve min_future_length
+                                          ],
+                           }
+
+valid_IDs_by_fixed_length = {'imputation': ['ct140-154BAT-15',
+                                            'ct140-158BAT-15',
+                                            'ct140-159BAT-15',
+                                            'ct140-162-15',
+                                            'ct140-163-15',
+                                            'ct140-166-15',
+                                            'ct140-168-15',
+                                            'ct140-169-15',
+                                            'ct140-170-15',
+                                            'ct140-171-15',
+                                            'ct140-172-15',
+                                            'ct140-173-15',
+                                            'ct140-174-15',
+                                            'ct140-178-15',
+                                            'ct140-179-15',
+                                            'ct140-188-15',
+                                            # 'ct140-189-15', error in computation
+                                            'ct140-635BAT-13',
+                                            'ct140-699BAT-13',
+                                            'ct140-700BAT-13',
+                                            'ct140-956BAT-14'],
+                             }
+
+imputation_extra_kwargs = ['expand_encoder_until_future_length', 'fix_training_prediction_length', 'store_missing_idxs', 'decoder_missing_zero_loss', 'predict_shift', 'max_train_days',
+                           'reverse_future', 'quantiles', 's_q', 'mid_rmse', 'mid_weight', 'monotonic_q',
+                           'dive_data', 'add_z']
+imputation_extra_kwargs_exclude = ['decoder_missing_zero_loss', 'fix_training_prediction_length'] # if HP not available, get the HP without these kwargs
+forecasting_extra_kwargs = ['store_missing_idxs', 'quantiles', 's_q', 'mid_rmse', 'mid_weight', 'max_train_days', 'monotonic_q',
+                            'dive_data', 'add_z']
+
+n_to_delete_prob = {200: 0.45,
+                    100: 0.72,
+                    50: 0.86,
+                    25: 0.93,
+                    10: 0.97,
+                    5: 0.98}
+
+cs_pr_plot = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
+
+trj_examples = dict(forecasting = [dict(animal=2, step=11),
+                                   dict(animal=9, step=23),
+                                   dict(animal=15, step=7),
+                                   dict(animal=37, step=7),
+                                   dict(animal=51, step=7),
+                                   dict(animal=76, step=7),
+                                   dict(animal=77, step=7),
+                                   dict(animal=83, step=7),
+                                   dict(animal=99, step=7),
+                                   dict(animal=113, step=7),
+                                   dict(animal=134, step=7),
+                                   dict(animal=156, step=7),
+                                   dict(animal=182, step=7),
+                                   dict(animal=184, step=7),
+                                   dict(animal=199, step=7),
+                                   dict(animal=203, step=7),
+                                   dict(animal=205, step=7),
+                                   ],
+                    imputation = [dict(animal=4, step=10),
+                                  dict(animal=11, step=10),
+                                  dict(animal=19, step=10),
+                                  dict(animal=33, step=10),
+                                  dict(animal=39, step=10),
+                                  dict(animal=43, step=10),
+                                  dict(animal=47, step=10),
+                                  dict(animal=51, step=10),
+                                  dict(animal=52, step=10),
+                                  dict(animal=79, step=10),
+                                  dict(animal=89, step=10),
+                                  dict(animal=112, step=10),
+                                  dict(animal=125, step=10),
+                                  dict(animal=129, step=10),
+                                  dict(animal=133, step=10),
+                                  dict(animal=134, step=10),
+                                  dict(animal=155, step=10),
+                                  dict(animal=176, step=10),
+                                  dict(animal=190, step=10),
+                                  dict(animal=203, step=10),
+                                  dict(animal=220, step=10),
+                                  dict(animal=226, step=10),
+                                  dict(animal=227, step=10),
+                                  dict(animal=229, step=10),
+                                  dict(animal=232, step=10)]
+                    )
