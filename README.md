@@ -22,7 +22,7 @@ Contains the time series for each animal. The required columns are:
 ```plaintext
 LATITUDE, LONGITUDE, DATE_TIME, ID
 -34.9285, 138.6007, 2020-01-01 12:00:00, A123
--33.8688, 151.2093, 2020-01-01 13:00:00, A123
+-33.8688, 138.8093, 2020-01-01 13:00:00, A123
 ...
 ```
 
@@ -40,7 +40,7 @@ Other static data (e.g. `Weight`, `Sex`, etc.) can be passed to the model by thr
 ```plaintext
 ID, Species, Sex
 A123, Southern elephant seal, M
-B456, outhern elephant seal, F
+B456, Southern elephant seal, F
 ...
 ```
 
@@ -51,7 +51,7 @@ B456, outhern elephant seal, F
 
 ## Usage
 
-Run the scripts under the `forecasting/scripts` directory for time-demanding computations. Use the `forecast.ipynb` notebook for interactive computation and plotting.
+Run the scripts under the `forecasting/scripts` directory for time-demanding computations. Use the `forecast.ipynb` notebook for interactive computation and plotting. To download complementary environmental variables from the [Copernicus ERA5 dataset](https://cds.climate.copernicus.eu/doi/10.24381/cds.adbb2d47) adjust the scripts within `ERA5-Land-data-analysis-main`.
 
 ## Installation
 
