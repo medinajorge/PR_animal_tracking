@@ -3,11 +3,16 @@
 [![Paper](https://img.shields.io/badge/Nature%20Scientific%20Reports-10.1038%2Fs41598--025--29520--2-blue)](https://www.nature.com/articles/s41598-025-29520-2)
 
 <p align="center">
-  <img src="assets/fc-scheme.pdf" alt="Forecasting scheme diagram" width="800"/>
+  <img src="assets/fc-scheme.png" alt="Forecasting scheme diagram" width="800"/>
 </p>
 
 
 ### Abstract
+
+<p align="center">
+  <img src="assets/graphical-abstract.png" alt="Forecasting scheme diagram" width="800"/>
+  </p>
+
 > Predicting marine animal movements from satellite tracking data remains challenging, limiting conservation and ecosystem management efforts. To address this, we trained the Temporal Fusion Transformer (TFT) neural network on tracking data from 434 southern elephant seals to forecast locations and fill data gaps (imputation) within 7-day windows. Compared to state-space models, TFT reduced location errors by 15% and produced more efficient prediction regions, identifying where seals were likely to be found while using less area: a fivefold reduction for forecasting and 30–40% reduction for imputation. The model performed best near the continental shelf and at low-to-moderate movement speeds, with bathymetry, water temperature and current direction being the most influential environmental factors affecting the model output. When applied to new geographic regions not represented in the training dataset, model performance declined by approximately 30% across most evaluation metrics, indicating challenges in transferring learned patterns to unfamiliar environments. Our findings show that deep learning is a promising tool for analyzing large, sparse tracking datasets. The enhanced predictive capabilities have potential for dynamic conservation measures, such as forecasting the spatial evolution of animals to minimize conflicts with human activities and environmental disturbances.
 
 
@@ -92,4 +97,5 @@ If you found this repository useful, please cite the following.
 ```
 
 **Plain text citation:**
+
 Medina Hernández, J., Rodríguez, J.P., McMahon, C.R. et al. Improving prediction region accuracy in marine animal movement with temporal fusion transformer. Sci Rep 16, 297 (2026). https://doi.org/10.1038/s41598-025-29520-2
