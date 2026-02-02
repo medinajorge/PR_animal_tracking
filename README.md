@@ -93,4 +93,4 @@ If you found this repository useful, please cite the following.
 
 **Plain text citation:**
 
-Medina Hernández, J., Rodríguez, J.P., McMahon, C.R. et al. Improving prediction region accuracy in marine animal movement with temporal fusion transformer. Sci Rep 16, 297 (2026). https://doi.org/10.1038/s41598-025-29520-2
+Medina Hernández, J., Rodríguez, J. P., McMahon, C. R., Sequeira, A. M. M., & Eguíluz, V. M. (2025). Improving prediction region accuracy in marine animal movement with temporal fusion transformer. *Scientific Reports*, *16*(297). https://doi.org/10.1038/s41598-025-29520-2
