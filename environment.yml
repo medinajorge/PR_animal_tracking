@@ -366,4 +366,3 @@ dependencies:
       - xgboost==2.1.1
       - xxhash==3.1.0
       - yarl==1.8.1
-prefix: /home/jorgemedina/anaconda3/envs/animaltorch
