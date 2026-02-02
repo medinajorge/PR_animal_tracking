@@ -1,8 +1,15 @@
 # Improving Prediction Region Accuracy in Marine Animal Movement with Temporal Fusion Transformer
 
-This repository contains the code for "Improving Prediction Region Accuracy in Marine Animal Movement with Temporal Fusion Transformer".
+[![Paper](https://img.shields.io/badge/Nature%20Scientific%20Reports-10.1038%2Fs41598--025--29520--2-blue)](https://www.nature.com/articles/s41598-025-29520-2)
 
-Our implementation relies on the [pytorch_forecasting](https://github.com/sktime/pytorch-forecasting) package.
+<p align="center">
+  <img src="assets/fc-scheme.pdf" alt="Forecasting scheme diagram" width="800"/>
+</p>
+
+
+### Abstract
+> Predicting marine animal movements from satellite tracking data remains challenging, limiting conservation and ecosystem management efforts. To address this, we trained the Temporal Fusion Transformer (TFT) neural network on tracking data from 434 southern elephant seals to forecast locations and fill data gaps (imputation) within 7-day windows. Compared to state-space models, TFT reduced location errors by 15% and produced more efficient prediction regions, identifying where seals were likely to be found while using less area: a fivefold reduction for forecasting and 30–40% reduction for imputation. The model performed best near the continental shelf and at low-to-moderate movement speeds, with bathymetry, water temperature and current direction being the most influential environmental factors affecting the model output. When applied to new geographic regions not represented in the training dataset, model performance declined by approximately 30% across most evaluation metrics, indicating challenges in transferring learned patterns to unfamiliar environments. Our findings show that deep learning is a promising tool for analyzing large, sparse tracking datasets. The enhanced predictive capabilities have potential for dynamic conservation measures, such as forecasting the spatial evolution of animals to minimize conflicts with human activities and environmental disturbances.
+
 
 ## Getting Started
 
@@ -65,3 +72,24 @@ and activate it
 ```bash
 conda activate animaltorch
 ```
+
+## Citation
+
+If you found this repository useful, please cite the following.
+
+```bibtex
+@article{MedinaHernandez2025,
+  title   = {Improving prediction region accuracy in marine animal movement with temporal fusion transformer},
+  author  = {Medina Hern{\'a}ndez, Jorge and Rodr{\'i}guez, Jorge P. and McMahon, Clive R. and Sequeira, Ana M. M. and Egu{\'\i}luz, V{\'\i}ctor M.},
+  journal = {Scientific Reports},
+  year    = {2025},
+  month   = dec,
+  volume  = {16},
+  number  = {297},
+  doi     = {10.1038/s41598-025-29520-2},
+  url     = {https://doi.org/10.1038/s41598-025-29520-2}
+}
+```
+
+**Plain text citation:**
+Medina Hernández, J., Rodríguez, J.P., McMahon, C.R. et al. Improving prediction region accuracy in marine animal movement with temporal fusion transformer. Sci Rep 16, 297 (2026). https://doi.org/10.1038/s41598-025-29520-2

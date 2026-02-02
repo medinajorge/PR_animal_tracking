@@ -4,7 +4,7 @@
 t=forecasting
 E=false # exclude median
 S=true # use rho_spread for optimization of Q
-K=true # optimize c_max
+K=false # optimize c_max
 for d in qrde #pchip
 do for m in contour #hull contour
 do if [ "$m" = hull ]; then
