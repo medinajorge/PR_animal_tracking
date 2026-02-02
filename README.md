@@ -24,9 +24,9 @@ Replace `dataset.csv` and `metadata.csv` under the `data` directory with your sp
 
 Contains the time series for each animal. The required columns are:
 
-- `LATITUDE`: The latitude coordinate of the animal's position.
-- `LONGITUDE`: The longitude coordinate of the animal's position.
-- `DATE_TIME`: The date and time of the recorded position.
+- `LATITUDE`: The latitude coordinate of the animal's position in degrees.
+- `LONGITUDE`: The longitude coordinate of the animal's position in degrees.
+- `DATE_TIME`: The date and time of the recorded position in standard format (YYYY-MM-DD HH:MM:SS).
 - `ID`: A unique identifier for the time series corresponding to each animal.
 
 #### Format of `dataset.csv`
@@ -55,11 +55,6 @@ A123, Southern elephant seal, M
 B456, Southern elephant seal, F
 ...
 ```
-
-## Important Notes
-
-- Ensure that the `ID` column is consistent across both `dataset.csv` and `metadata.csv` files.
-- The date and time format in `DATE_TIME` should be consistent and in a standard format (e.g., YYYY-MM-DD HH:MM:SS).
 
 ## Usage
 
